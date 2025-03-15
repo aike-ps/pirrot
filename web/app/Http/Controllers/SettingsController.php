@@ -194,7 +194,8 @@ class SettingsController extends Controller
             '28	Донецька область',
             '29	Автономна Республіка Крим',
             '30	м. Севастополь',
-            '31	м. Київ'
+            '31	м. Київ',
+            'FULL List https://docs.google.com/spreadsheets/d/1XnTOzcPHd1LZUrarR1Fk43FUyl8Ae6a6M7pcwDRjNdA/'
         ],
         'callsign' => [
             'Simplex repeater (ident) code',

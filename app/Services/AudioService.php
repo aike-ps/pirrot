@@ -172,6 +172,25 @@ class AudioService
         }
     }
 
+    public function alarmOn()
+    {
+        $file = $this->soundPath . 'alarm/alarmon.wav';
+        $this->alarm($file);
+    }
+
+    public function alarmOff()
+    {
+        $file = $this->soundPath . 'alarm/alarmoff.wav';
+        $this->alarm($file);
+    }
+
+    private function alarm($file)
+    {
+        if (file_exists($this->soundPath . 'core/' . $file)) {
+            $this->play(' ' . $this->soundPath . 'core/' . $file);
+        }
+    }
+
     /**
      * Play the specified courtesy tone.
      *

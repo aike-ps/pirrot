@@ -13,7 +13,7 @@ use Ballen\Pirrot\Services\AudioService;
 
 define('ALARM_FILE', __DIR__ . '/alarm_status.json');
 define('API_URL', 'https://api.alerts.in.ua/v1/alerts/active.json');
-define('CHECK_INTERVAL', 60); // Интервал проверки в секундах
+define('CHECK_INTERVAL', 60);
 
 /**
  * Class AudioCommand

@@ -2,137 +2,209 @@
 
 namespace Ballen\Pirrot\Commands;
 
-use Ballen\Clip\ConsoleApplication;
 use Ballen\Clip\Utilities\ArgumentsParser;
-use Ballen\Pirrot\Foundation\Config;
+use Ballen\Executioner\Exceptions\ExecutionException;
+use Ballen\Executioner\Executioner;
+use Ballen\GPIO\Adapters\VfsAdapter;
+use Ballen\GPIO\Exceptions\GPIOException;
 use Ballen\GPIO\GPIO;
-use Ballen\GPIO\Pin;
+use Ballen\Pirrot\Foundation\Config;
+use Ballen\Pirrot\Services\AudioService;
+
+define('ALARM_FILE', __DIR__ . '/alarm_status.json');
+define('API_URL', 'https://api.alerts.in.ua/v1/alerts/active.json');
+define('CHECK_INTERVAL', 60); // Интервал проверки в секундах
 
 /**
- * Class Pirrot BaseCommand
+ * Class AudioCommand
  *
  * @package Ballen\Pirrot\Commands
  */
-class AlarmCommand extends ConsoleApplication
+class AlarmCommand extends BaseCommand
 {
-    /**
-     * The software configuration.
-     *
-     * @var Config
-     */
-    public $config;
 
     /**
-     * The application base path.
+     * The audio service class.
      *
-     * @var string
+     * @var AudioService
      */
-    public $basePath;
+    protected $audioService;
 
     /**
-     * GPIO object
+     * Auto-detected Binary path locations.
      *
-     * @var GPIO
+     * @var array
      */
-    public $gpio;
+    protected $binPaths = [];
 
     /**
-     * COS Input Pin
-     *
-     * @var Pin
-     */
-    protected $inputCos;
-
-    /**
-     * PTT/TX Relay Pin
-     *
-     * @var Pin
-     */
-    protected $outputPtt;
-
-    /**
-     * Power LED Pin
-     *
-     * @var Pin
-     */
-    protected $outputLedPwr;
-
-    /**
-     * Receive LED Pin
-     *
-     * @var Pin
-     */
-    protected $outputLedRx;
-
-    /**
-     * Transmit LED Pin
-     *
-     * @var Pin
-     */
-    protected $outputLedTx;
-
-    /**
-     * BaseCommand constructor.
+     * AudioCommand constructor.
      *
      * @param ArgumentsParser $argv
+     * @throws GPIOException
      */
     public function __construct(ArgumentsParser $argv)
     {
-        $this->getBasePath();
-        $this->retrieveConfiguration();
-        $this->setTimezone($this->config->get('timezone'));
+
         parent::__construct($argv);
+
+        $alarm = $this->config->get('alarm');
+
+        if($alarm !== true){
+            return;
+        }
+
+        $this->detectExternalBinaries([
+            'play'
+        ]);
+
+        $this->audioService = new AudioService($this->config);
+        $this->audioService->soundPath = $this->basePath . '/resources/sound/';
+        $this->audioService->audioPlayerBin = $this->binPaths['play'] . ' -q';
+
+        if (file_exists(ALARM_FILE)) {
+            $lastStatus = json_decode(file_get_contents(ALARM_FILE), true);
+        } else {
+            $lastStatus = ['status' => null];
+        }
+
+        $currentStatus = $this->getAlarmStatusFromAPI();
+
+        if ($currentStatus !== $lastStatus['status']) {
+            file_put_contents(ALARM_FILE, json_encode(['status' => $currentStatus]));
+
+            $this->outputPtt->setValue(GPIO::HIGH);
+            $this->outputLedTx->setValue(GPIO::HIGH);
+
+            if ($currentStatus === 'active') {
+                $this->audioService->alarmOn();
+            } else {
+                $this->audioService->alarmOff();
+            }
+
+            $this->outputPtt->setValue(GPIO::LOW);
+            $this->outputLedTx->setValue(GPIO::LOW);
+        }
+
+        $this->gpio = $this->initGpio();
+    }
+
+    private function getAlarmStatusFromAPI()
+    {
+            $alarm_key = $this->config->get('alarm_key');
+            $alerts_location_uid = $this->config->get('alerts_location_uid');
+
+            if(empty($alarm_key) || empty($alerts_location_uid)){
+                return false;
+            }
+
+            $url = sprintf(API_URL, $alerts_location_uid) . '?token=' . $alarm_key;
+
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . $alarm_key
+            ]);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode !== 200 || !$response) {
+                return null; // Ошибка запроса
+            }
+
+            $data = json_decode($response, true);
+
+            dump($data);
+
+            return !empty($data) ? 'active' : 'inactive';
     }
 
     /**
-     * Retrieve and merge the software configuration.
+     * Used to detect external binaries required.
      *
-     * @return void
+     * @param array $binaries
      */
-    private function retrieveConfiguration()
+    private function detectExternalBinaries(array $binaries)
     {
-        $this->config = new Config('/etc/pirrot.conf', $this->basePath . '/build/configs/pirrot_default.conf');
+        foreach ($binaries as $bin) {
+            $executioner = new Executioner();
+            $executioner->setApplication('which')->addArgument($bin);
+            try {
+                $executioner->execute();
+            } catch (ExecutionException $ex) {
+                $this->writeln($this->getCurrentLogTimestamp() . 'ERROR: The dependency "' . $bin . '" was not found; please install and/or reference it in your $PATH!');
+                $this->exitWithError();
+            }
+            $this->binPaths[$bin] = trim($executioner->resultAsText());
+        }
     }
 
     /**
-     * Computes the base path of the applicaiton.
+     * Used to determine if the machine is GPIO enabled.
      *
-     * @return void
+     * @return false
      */
-    private function getBasePath()
+    private function detectGpioFilesystem()
     {
-        $path = rtrim(realpath(__DIR__), 'app/Commands');
-        $this->basePath = $path;
+        if (file_exists('/sys/class/gpio')) {
+            return true;
+        }
+        return false;
     }
 
     /**
-     * Sets the default timezone for the application.
+     * Initialise the GPIO handler object.
      *
-     * @param string $timezone
-     * @return void
+     * @return GPIO
+     * @throws GPIOException
      */
-    private function setTimezone($timezone = 'Europe/London')
+    private function initGpio()
     {
-        date_default_timezone_set($timezone);
+        $gpio = new GPIO(new VfsAdapter());
+        if ($this->detectGpioFilesystem()) {
+            $gpio = new GPIO();
+        }
+
+        // Configure GPIO pin types.
+        $this->inputCos = $gpio->pin(
+            $this->config->get('in_cor_pin'),
+            GPIO::IN,
+            $this->config->get('cos_pin_invert', false)
+        );
+        $this->outputPtt = $gpio->pin(
+            $this->config->get('out_ptt_pin'),
+            GPIO::OUT,
+            $this->config->get('ptt_pin_invert', false)
+        );
+        $this->outputLedPwr = $gpio->pin(
+            $this->config->get('out_ready_led_pin'),
+            GPIO::OUT,
+            $this->config->get('ready_pin_invert', false)
+        );
+        $this->outputLedRx = $gpio->pin(
+            $this->config->get('out_rx_led_pin'),
+            GPIO::OUT,
+            $this->config->get('rx_pin_invert', false)
+        );
+        $this->outputLedTx = $gpio->pin(
+            $this->config->get('out_tx_led_pin'),
+            GPIO::OUT,
+            $this->config->get('tx_pin_invert', false)
+        );
+
+        return $gpio;
     }
 
     /**
-     * Provides a simple helper method to get a formatted timestamp for log file output.
+     * Ensures that the Power LED is ON.
+     * @throws GPIOException
      */
-    protected function getCurrentLogTimestamp()
-    {
-        return date('c') . ' - ';
-    }
-
-    /**
-     * Sets the process name.
-     * @param string $name The process name to use.
-     * @return bool
-     */
-    protected function setProcessName($name)
-    {
-        $pid = getmypid();
-        return cli_set_process_title($name);
+    protected function setPowerLed(){
+        if($this->outputLedPwr->getValue() == GPIO::LOW){
+            $this->outputLedPwr->setValue(GPIO::HIGH);
+        }
     }
 
 }

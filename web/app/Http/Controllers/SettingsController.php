@@ -167,6 +167,7 @@ class SettingsController extends Controller
         'timezone' => ['The timezone you wish to use for logging, TTS services, and the web interface (if enabled)'],
         'alerts_key' => ['EXAMPLE XXXXXXXX:YYYYYYYYYYYYYYYYYYYYYYYY'],
         'alerts_location_uid' => [
+            'FULL UID List: https://docs.google.com/spreadsheets/d/1XnTOzcPHd1LZUrarR1Fk43FUyl8Ae6a6M7pcwDRjNdA/',
             'EXAMPLES UID: ',
             '3	Хмельницька область',
             '4	Вінницька область',
@@ -194,8 +195,7 @@ class SettingsController extends Controller
             '28	Донецька область',
             '29	Автономна Республіка Крим',
             '30	м. Севастополь',
-            '31	м. Київ',
-            'FULL List https://docs.google.com/spreadsheets/d/1XnTOzcPHd1LZUrarR1Fk43FUyl8Ae6a6M7pcwDRjNdA/'
+            '31	м. Київ'
         ],
         'callsign' => [
             'Simplex repeater (ident) code',

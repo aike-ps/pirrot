@@ -16,6 +16,8 @@ class SettingsController extends Controller
     private $fieldGroups = [
 
         'timezone' => Setting::GROUP_GENERAL,
+        'alerts' => Setting::GROUP_GENERAL,
+        'alerts_key' => Setting::GROUP_GENERAL,
         'callsign' => Setting::GROUP_GENERAL,
         'enabled' => Setting::GROUP_GENERAL,
         'transmit_mode' => Setting::GROUP_GENERAL,
@@ -90,6 +92,7 @@ class SettingsController extends Controller
      */
     private $booleanFields = [
         'enabled',
+        'alerts',
         'auto_ident',
         'ident_use_custom',
         'ident_time',
@@ -117,6 +120,8 @@ class SettingsController extends Controller
      */
     private $labelOverrides = [
         'enabled' => 'Enable Repeater',
+        'alerts' => 'AIR alerts for Ukraine',
+        'alerts_key' => 'API key for alerts',
         'ident_use_custom' => 'Override default ident',
         'tripwire_enabled' => 'Enable Tripwire',
         'purge_recording_after' => 'Purge recordings after (days)',
@@ -158,6 +163,7 @@ class SettingsController extends Controller
 
         // General
         'timezone' => ['The timezone you wish to use for logging, TTS services, and the web interface (if enabled)'],
+        'alerts_key' => ['EXAMPLE XXXXXXXX:YYYYYYYYYYYYYYYYYYYYYYYY'],
         'callsign' => [
             'Simplex repeater (ident) code',
             'This is phonetically transmitted if you enable the "Auto Ident" feature below.'

@@ -167,6 +167,7 @@ class SettingsController extends Controller
         'timezone' => ['The timezone you wish to use for logging, TTS services, and the web interface (if enabled)'],
         'alerts_key' => ['EXAMPLE XXXXXXXX:YYYYYYYYYYYYYYYYYYYYYYYY'],
         'alerts_location_uid' => [
+            'EXAMPLES UID: ',
             '3	Хмельницька область',
             '4	Вінницька область',
             '5	Рівненська область',

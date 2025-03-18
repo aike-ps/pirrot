@@ -8,5 +8,5 @@
 20 0 * * *  root    /opt/pirrot/pirrot purge > /var/log/pirrot.log
 
 # Every minutes
-* * * * *  root    /opt/pirrot/pirrot alerts > /var/log/pirrot.log
+* * * * *  root    /opt/pirrot/pirrot alarm > /var/log/pirrot.log
 

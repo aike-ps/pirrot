@@ -163,6 +163,11 @@ class AlarmCommand extends BaseCommand implements CommandInterface
      */
     private function initGpio()
     {
+        //
+        return new GPIO(new VfsAdapter());
+        //
+
+
         $gpio = new GPIO(new VfsAdapter());
         if ($this->detectGpioFilesystem()) {
             $gpio = new GPIO();

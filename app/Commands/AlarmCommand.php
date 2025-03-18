@@ -10,6 +10,7 @@ use Ballen\GPIO\Exceptions\GPIOException;
 use Ballen\GPIO\GPIO;
 use Ballen\Pirrot\Foundation\Config;
 use Ballen\Pirrot\Services\AudioService;
+use Ballen\Clip\Interfaces\CommandInterface;
 
 define('ALARM_FILE', __DIR__ . '/alarm_status.json');
 define('API_URL', 'https://api.alerts.in.ua/v1/alerts/active.json');
@@ -20,7 +21,7 @@ define('CHECK_INTERVAL', 60);
  *
  * @package Ballen\Pirrot\Commands
  */
-class AlarmCommand extends BaseCommand
+class AlarmCommand extends BaseCommand implements CommandInterface
 {
 
     /**
@@ -48,9 +49,9 @@ class AlarmCommand extends BaseCommand
 
         parent::__construct($argv);
 
-        $alarm = $this->config->get('alarm');
+        $alarm = $this->config->get('alerts');
 
-        if($alarm !== true){
+        if(!$alarm){
             return;
         }
 
@@ -91,7 +92,7 @@ class AlarmCommand extends BaseCommand
 
     private function getAlarmStatusFromAPI()
     {
-            $alarm_key = $this->config->get('alarm_key');
+            $alarm_key = $this->config->get('alerts_key');
             $alerts_location_uid = $this->config->get('alerts_location_uid');
 
             if(empty($alarm_key) || empty($alerts_location_uid)){
@@ -116,7 +117,7 @@ class AlarmCommand extends BaseCommand
 
             $data = json_decode($response, true);
 
-            dump($data);
+            var_dump($data);
 
             return !empty($data) ? 'active' : 'inactive';
     }
@@ -205,6 +206,11 @@ class AlarmCommand extends BaseCommand
         if($this->outputLedPwr->getValue() == GPIO::LOW){
             $this->outputLedPwr->setValue(GPIO::HIGH);
         }
+    }
+
+    public function handle()
+    {
+
     }
 
 }

@@ -15,7 +15,7 @@ use Ballen\Pirrot\Commands\HelpCommand;
 use Ballen\Pirrot\Commands\TerminateCommand;
 use Ballen\Pirrot\Commands\WebCommand;
 use Ballen\Pirrot\Commands\PurgeCommand;
-use \Ballen\Pirrot\Commands\AlarmCommand;
+use Ballen\Pirrot\Commands\AlarmCommand;
 
 // Set the current directory of the CLI script.
 $bindir = dirname(__FILE__);

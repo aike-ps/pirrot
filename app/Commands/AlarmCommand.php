@@ -13,7 +13,7 @@ use Ballen\Pirrot\Services\AudioService;
 use Ballen\Clip\Interfaces\CommandInterface;
 
 define('ALARM_FILE', __DIR__ . '/alarm_status.json');
-define('API_URL', 'https://api.alerts.in.ua/v1/alerts/active.json');
+define('API_URL', 'https://api.ukrainealarm.com/api/v3/alerts/');
 define('CHECK_INTERVAL', 60);
 
 /**
@@ -37,6 +37,8 @@ class AlarmCommand extends BaseCommand implements CommandInterface
      * @var array
      */
     protected $binPaths = [];
+    private $maxTime = 60; // ttl (in seconds)
+    private $interval = 10; // interval (in seconds)
 
     /**
      * AudioCommand constructor.
@@ -51,7 +53,7 @@ class AlarmCommand extends BaseCommand implements CommandInterface
 
         $alarm = $this->config->get('alerts');
 
-        if(!$alarm){
+        if (!$alarm) {
             return;
         }
 
@@ -71,6 +73,10 @@ class AlarmCommand extends BaseCommand implements CommandInterface
 
         $currentStatus = $this->getAlarmStatusFromAPI();
 
+        if (!$currentStatus) {
+            return $currentStatus;
+        }
+
         if ($currentStatus !== $lastStatus['status']) {
             file_put_contents(ALARM_FILE, json_encode(['status' => $currentStatus]));
 
@@ -79,8 +85,10 @@ class AlarmCommand extends BaseCommand implements CommandInterface
 
             if ($currentStatus === 'active') {
                 $this->audioService->alarmOn();
+                print_r(['alarm' => 'on']);
             } else {
                 $this->audioService->alarmOff();
+                print_r(['alarm' => 'off']);
             }
 
             $this->outputPtt->setValue(GPIO::LOW);
@@ -90,36 +98,60 @@ class AlarmCommand extends BaseCommand implements CommandInterface
         $this->gpio = $this->initGpio();
     }
 
+
     private function getAlarmStatusFromAPI()
     {
-            $alarm_key = $this->config->get('alerts_key');
-            $alerts_location_uid = $this->config->get('alerts_location_uid');
+        $alarm_key = $this->config->get('alerts_key');
+        $alerts_location_uid = $this->config->get('alerts_location_uid');
 
-            if(empty($alarm_key) || empty($alerts_location_uid)){
-                return false;
-            }
+        if (empty($alarm_key) || empty($alerts_location_uid)) {
+            return false;
+        }
 
-            $url = sprintf(API_URL, $alerts_location_uid) . '?token=' . $alarm_key;
+        $url = API_URL . $alerts_location_uid;
 
+        $startTime = time();
+
+        while (true) {
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                'Authorization: Bearer ' . $alarm_key
+                'Authorization: ' . $alarm_key
             ]);
 
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
 
-            if ($httpCode !== 200 || !$response) {
-                return null; // Ошибка запроса
+            if ($httpCode == 200 && !empty($response)) {
+                $data = json_decode($response, true);
+
+                if (isset($data[0]['activeAlerts'])) {
+                    return 'active';
+                }
+
+                return 'inactive';
             }
 
-            $data = json_decode($response, true);
+            if (time() - $startTime >= $this->maxTime) {
+                print_r([
+                    'Error' => 'not response 200',
+                    'http code' => $httpCode,
+                    'response' => $response
+                ]);
+                break;
+            }
 
-            var_dump($data);
+            print_r([
+                'http code' => $httpCode,
+                'response' => $response,
+                'message' => "Retry query after $this->interval seconds..."
+            ]);
 
-            return !empty($data) ? 'active' : 'inactive';
+            sleep($this->interval);
+        }
+
+        return false;
     }
 
     /**
@@ -163,12 +195,8 @@ class AlarmCommand extends BaseCommand implements CommandInterface
      */
     private function initGpio()
     {
-        //
-        return new GPIO(new VfsAdapter());
-        //
-
-
         $gpio = new GPIO(new VfsAdapter());
+
         if ($this->detectGpioFilesystem()) {
             $gpio = new GPIO();
         }
@@ -207,8 +235,9 @@ class AlarmCommand extends BaseCommand implements CommandInterface
      * Ensures that the Power LED is ON.
      * @throws GPIOException
      */
-    protected function setPowerLed(){
-        if($this->outputLedPwr->getValue() == GPIO::LOW){
+    protected function setPowerLed()
+    {
+        if ($this->outputLedPwr->getValue() == GPIO::LOW) {
             $this->outputLedPwr->setValue(GPIO::HIGH);
         }
     }

@@ -96,7 +96,6 @@ class AlarmCommand extends BaseCommand implements CommandInterface
             $this->outputPtt->setValue(GPIO::LOW);
             $this->outputLedTx->setValue(GPIO::LOW);
         }
-
     }
 
 

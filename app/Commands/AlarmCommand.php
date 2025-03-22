@@ -126,7 +126,7 @@ class AlarmCommand extends BaseCommand implements CommandInterface
             if ($httpCode == 200 && !empty($response)) {
                 $data = json_decode($response, true);
 
-                if (isset($data[0]['activeAlerts'])) {
+                if (isset($data[0]['activeAlerts']) && count($data[0]['activeAlerts']) > 0) {
                     return 'active';
                 }
 

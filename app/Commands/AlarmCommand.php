@@ -80,6 +80,8 @@ class AlarmCommand extends BaseCommand implements CommandInterface
         if ($currentStatus !== $lastStatus['status']) {
             file_put_contents(ALARM_FILE, json_encode(['status' => $currentStatus]));
 
+            $this->gpio = $this->initGpio();
+
             $this->outputPtt->setValue(GPIO::HIGH);
             $this->outputLedTx->setValue(GPIO::HIGH);
 
@@ -95,7 +97,6 @@ class AlarmCommand extends BaseCommand implements CommandInterface
             $this->outputLedTx->setValue(GPIO::LOW);
         }
 
-        $this->gpio = $this->initGpio();
     }
 
 

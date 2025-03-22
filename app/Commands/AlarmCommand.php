@@ -14,7 +14,6 @@ use Ballen\Clip\Interfaces\CommandInterface;
 
 define('ALARM_FILE', __DIR__ . '/alarm_status.json');
 define('API_URL', 'https://api.ukrainealarm.com/api/v3/alerts/');
-define('CHECK_INTERVAL', 60);
 
 /**
  * Class AudioCommand

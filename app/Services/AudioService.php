@@ -186,8 +186,8 @@ class AudioService
 
     private function alarm($file)
     {
-        if (file_exists($this->soundPath . 'core/' . $file)) {
-            $this->play(' ' . $this->soundPath . 'core/' . $file);
+        if (file_exists($file)) {
+            $this->play($file);
         }
     }
 

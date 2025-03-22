@@ -16,6 +16,9 @@ class SettingsController extends Controller
     private $fieldGroups = [
 
         'timezone' => Setting::GROUP_GENERAL,
+        'alerts' => Setting::GROUP_GENERAL,
+        'alerts_key' => Setting::GROUP_GENERAL,
+        'alerts_location_uid' => Setting::GROUP_GENERAL,
         'callsign' => Setting::GROUP_GENERAL,
         'enabled' => Setting::GROUP_GENERAL,
         'transmit_mode' => Setting::GROUP_GENERAL,
@@ -90,6 +93,7 @@ class SettingsController extends Controller
      */
     private $booleanFields = [
         'enabled',
+        'alerts',
         'auto_ident',
         'ident_use_custom',
         'ident_time',
@@ -117,6 +121,9 @@ class SettingsController extends Controller
      */
     private $labelOverrides = [
         'enabled' => 'Enable Repeater',
+        'alerts' => 'AIR alerts for Ukraine',
+        'alerts_key' => 'API key for alerts',
+        'alerts_location_uid' => 'UID for alerts location',
         'ident_use_custom' => 'Override default ident',
         'tripwire_enabled' => 'Enable Tripwire',
         'purge_recording_after' => 'Purge recordings after (days)',
@@ -158,6 +165,38 @@ class SettingsController extends Controller
 
         // General
         'timezone' => ['The timezone you wish to use for logging, TTS services, and the web interface (if enabled)'],
+        'alerts_key' => ['EXAMPLE XXXXXXXX:YYYYYYYYYYYYYYYYYYYYYYYY'],
+        'alerts_location_uid' => [
+            'FULL UID List: https://docs.google.com/spreadsheets/d/1XnTOzcPHd1LZUrarR1Fk43FUyl8Ae6a6M7pcwDRjNdA/',
+            'EXAMPLES UID: ',
+            '3	Хмельницька область',
+            '4	Вінницька область',
+            '5	Рівненська область',
+            '8	Волинська область',
+            '9	Дніпропетровська область',
+            '10	Житомирська область',
+            '11	Закарпатська область',
+            '12	Запорізька область',
+            '13	Івано-Франківська область',
+            '14	Київська область',
+            '15	Кіровоградська область',
+            '16	Луганська область',
+            '17	Миколаївська область',
+            '18	Одеська область',
+            '19	Полтавська область',
+            '20	Сумська область',
+            '21	Тернопільська область',
+            '22	Харківська область',
+            '23	Херсонська область',
+            '24	Черкаська область',
+            '25	Чернігівська область',
+            '26	Чернівецька область',
+            '27	Львівська область',
+            '28	Донецька область',
+            '29	Автономна Республіка Крим',
+            '30	м. Севастополь',
+            '31	м. Київ'
+        ],
         'callsign' => [
             'Simplex repeater (ident) code',
             'This is phonetically transmitted if you enable the "Auto Ident" feature below.'

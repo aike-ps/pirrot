@@ -7,6 +7,11 @@
 # Every day at 00:20, clear out recordings older than X days (if enabled in the /etc/pirrot.conf)
 20 0 * * *  root    /opt/pirrot/pirrot purge > /var/log/pirrot.log
 
-# Every minutes
+# Every minute
 * * * * *  root    /opt/pirrot/pirrot alarm >> /var/log/pirrot_alarm.log
+
+# Every hour
+0 * * * *  root    /opt/pirrot/pirrot clock > /var/log/clock_alarm.log
+
+
 

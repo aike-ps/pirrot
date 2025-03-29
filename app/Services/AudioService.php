@@ -175,16 +175,22 @@ class AudioService
     public function alarmOn()
     {
         $file = $this->soundPath . 'alarm/alarmon.wav';
-        $this->alarm($file);
+        $this->playFile($file);
     }
 
     public function alarmOff()
     {
         $file = $this->soundPath . 'alarm/alarmoff.wav';
-        $this->alarm($file);
+        $this->playFile($file);
     }
 
-    private function alarm($file)
+    public function playClock(int $hour = 0)
+    {
+        $file = $this->soundPath . 'clock/'.$hour.'.wav';
+        $this->playFile($file);
+    }
+
+    private function playFile($file)
     {
         if (file_exists($file)) {
             $this->play($file);

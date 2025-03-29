@@ -16,6 +16,7 @@ use Ballen\Pirrot\Commands\TerminateCommand;
 use Ballen\Pirrot\Commands\WebCommand;
 use Ballen\Pirrot\Commands\PurgeCommand;
 use Ballen\Pirrot\Commands\AlarmCommand;
+use Ballen\Pirrot\Commands\ClockCommand;
 
 // Set the current directory of the CLI script.
 $bindir = dirname(__FILE__);
@@ -36,6 +37,7 @@ $app->add('help', HelpCommand::class);
 $app->add('version', VersionCommand::class);
 $app->add('setwebpwd', SetAdminPwdCommand::class);
 $app->add('alarm', AlarmCommand::class);
+$app->add('clock', ClockCommand::class);
 
 // System/BackgroundApp commands
 $app->add('cleanup', TerminateCommand::class);

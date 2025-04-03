@@ -19,6 +19,7 @@ class SettingsController extends Controller
         'alerts' => Setting::GROUP_GENERAL,
         'alerts_key' => Setting::GROUP_GENERAL,
         'alerts_location_uid' => Setting::GROUP_GENERAL,
+        'clock' => Setting::GROUP_GENERAL,
         'callsign' => Setting::GROUP_GENERAL,
         'enabled' => Setting::GROUP_GENERAL,
         'transmit_mode' => Setting::GROUP_GENERAL,
@@ -94,6 +95,7 @@ class SettingsController extends Controller
     private $booleanFields = [
         'enabled',
         'alerts',
+        'clock',
         'auto_ident',
         'ident_use_custom',
         'ident_time',
@@ -196,6 +198,9 @@ class SettingsController extends Controller
             '29	Автономна Республіка Крим',
             '30	м. Севастополь',
             '31	м. Київ'
+        ],
+        'clock' => [
+            'Hourly time notifications'
         ],
         'callsign' => [
             'Simplex repeater (ident) code',
